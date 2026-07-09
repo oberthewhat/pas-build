@@ -915,6 +915,23 @@ export default function TrackingBuildGuide() {
       <div style={{ height: 3, background: T.line, borderRadius: 2, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${fields.length ? (filled / fields.length) * 100 : 0}%`, background: T.accent, transition: "width .4s" }} />
       </div>
+      {(client.msmEmail || (cfg.ads && client.adSpecEmail)) && (
+        <div style={{ marginTop: 6 }}>
+          <div style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: 1.2, textTransform: "uppercase", color: T.muted, fontWeight: 700, marginBottom: 4 }}>Contacts</div>
+          {[
+            client.msmEmail ? { l: "MSM", v: client.msmEmail } : null,
+            cfg.ads && client.adSpecEmail ? { l: "Ad Specialist", v: client.adSpecEmail } : null,
+          ].filter(Boolean).map(c => (
+            <div key={c.l} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 7px", borderRadius: 6, background: T.codeBg, marginBottom: 4 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.ink }}>{c.l}</div>
+                <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.v}</div>
+              </div>
+              <CopyBtn text={c.v} small />
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4, maxHeight: compact ? "45vh" : "none", overflowY: compact ? "auto" : "visible" }}>
         {fields.map(f => {
           const v = (codes[f.k] || "").trim();
