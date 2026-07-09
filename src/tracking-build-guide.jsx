@@ -588,6 +588,8 @@ export default function TrackingBuildGuide() {
         goalSteps.push({ id: "adsl1", title: "Lead goal: New Web Lead", body: <>
           Navigate to <Shot u="https://madshot.net/6939edc61230.png" l="Goals › Summary › New Conversion Action" />. Website conversions are checked by default; also check <Shot u="https://madshot.net/a3dd190460d6.png" l="Conversions from phone calls" />. <Shot u="https://madshot.net/56e0b2ed5435.png" l="Add URL" /> → paste your URL → <Shot u="https://madshot.net/b16db59b5ce4.png" l="select Google Tag" /> → Done → Save and Continue. Click See All → <Shot u="https://madshot.net/819c5c04308a.png" l="Submit lead form" /> → <Shot u="https://madshot.net/9f4041ca6915.png" l="+ Add conversion actions" /> → <Shot u="https://madshot.net/4d400b1f372f.png" l="the google tag under Web" /> → create new → <Shot u="https://madshot.net/2b34050ba824.png" l="set up manually using code" /> → enter URL, Scan, open Conversion Setting.
           <div style={{ margin: "6px 0" }}>Primary action for bidding · Name <Lit v={`New Web Lead ${M}`} /> · Value: <Shot u="https://madshot.net/d4f10e64b5a5.png" l="different values per conversion" />, check Event snippet, default USD $0 · <Shot u="https://madshot.net/d318108d5fa9.png" l="Count: One" /> · rest default → Done.</div>
+          Once saved, open <b>See event snippet</b> (or Tag Setup → Use Google Tag Manager) — the second value is this goal's label; paste it now so you don't have to circle back:
+          <CodeField k="leadLabel" />
         </> });
       } else if (cfg.leads !== false) {
         goalSteps.push({ id: "adsl1b", title: "Lead goal: New Web Lead", body: <>
@@ -598,21 +600,22 @@ export default function TrackingBuildGuide() {
       if (cfg.c2c !== "none") {
         goalSteps.push({ id: "adsc1", title: "Call goals: Calls From Ads", body: <>
           <Shot u="https://madshot.net/ddd741a0bab8.png" l="Add another category" /> → <Shot u="https://madshot.net/70a260cdd710.png" l="Phone call lead" /> → +Add conversion action → <Shot u="https://madshot.net/bbd3e3cf595a.png" l="Calls from ads" /> → Edit Settings. Primary action · Name <Lit v={`Calls From Ads ${M}`} /> · Value: <Shot u="https://madshot.net/d4f10e64b5a5.png" l="different values" />, Event snippet checked, USD $0 · <Shot u="https://madshot.net/d318108d5fa9.png" l="Count: one" /> · Done.
+          <div style={{ marginTop: 6, fontSize: 12.5, color: T.muted }}>No label to paste for this one — Calls From Ads fires from the ad itself, not a site tag, so it never goes in GTM or Zoho.</div>
         </> });
         goalSteps.push({ id: "adsc2", title: "Call goals: Dynamic Call Conversion", body: <>
-          +Add conversion action → <Shot u="https://madshot.net/272c8606d5e3.png" l="Calls from website visits" />. Check "Someone calls a number on my website" and <Shot u="https://madshot.net/cd0a4c3148cb.png" l="paste the CTC-Ads number" /> in the correct format into <b>both</b> boxes → Use this event → <Shot u="https://madshot.net/8aa4d9204318.png" l="Edit Settings" />. Primary action · Name <Lit v={`Dynamic Call Conversion ${M}`} /> · <Shot u="https://madshot.net/18871bf41ae7.png" l="don't use a value" /> · Count: one · Done.
+          +Add conversion action → <Shot u="https://madshot.net/272c8606d5e3.png" l="Calls from website visits" />. Check "Someone calls a number on my website" and <Shot u="https://madshot.net/cd0a4c3148cb.png" l="paste the CTC-Ads number" /> in the correct format into <b>both</b> boxes → Use this event → <Shot u="https://madshot.net/8aa4d9204318.png" l="Edit Settings" />. Primary action · Name <Lit v={`Dynamic Call Conversion ${M}`} /> · <Shot u="https://madshot.net/18871bf41ae7.png" l="don't use a value" /> · Count: one · Done. Grab the label from See event snippet / Tag Setup and paste it here:
+          <CodeField k="callLabel" />
           <Warn>Destination + display number must be your CTC-Ads number. No CTCs? Use the website's phone number — unless the MSM said to skip dynamic call tracking.</Warn>
         </> });
         goalSteps.push({ id: "adsc3", title: "Call goals: Mobile Call Click (if floating mobile footer)", body: <>
-          Only if the mobile click-to-call link shows an icon only (floating mobile footer enabled). +Add conversion action → Calls from website visits → <Shot u="https://madshot.net/f459a9add2d3.png" l="someone makes a call by clicking a number" /> → Use this event → Edit Settings. <b>Secondary</b> action (not used for bidding) · Name <Lit v={`Mobile Call Click Conversion ${M}`} /> · Value: different values, Event snippet, USD $0 · Count: one · Done.
+          Only if the mobile click-to-call link shows an icon only (floating mobile footer enabled). +Add conversion action → Calls from website visits → <Shot u="https://madshot.net/f459a9add2d3.png" l="someone makes a call by clicking a number" /> → Use this event → Edit Settings. <b>Secondary</b> action (not used for bidding) · Name <Lit v={`Mobile Call Click Conversion ${M}`} /> · Value: different values, Event snippet, USD $0 · Count: one · Done. Label goes here (screenshot: <Shot u="https://madshot.net/e23d20a6b6ec.png" l="mobile label" />):
+          <CodeField k="mobileLabel" />
           <Warn>If it won't let you set Secondary here, open the goal from the main dashboard afterward and switch it to <Shot u="https://madshot.net/dcfad7c29323.png" l="Secondary" />. These can generate spam — Secondary keeps them out of Marketing 360.</Warn>
         </> });
       }
-      goalSteps.push({ id: "adslabels", title: "Save and capture Conversion ID + labels", body: <>
-        Click Save and continue, then for each conversion action select <b>See event snippet</b>: the first number is the <Shot u="https://madshot.net/9a6bbc707e10.png" l="Conversion ID" />, the second is the label. Or click Finish, open each action, open <Shot u="https://madshot.net/51f00b361b4c.png" l="Tag Setup" /> → Use Google Tag Manager → copy the <Shot u="https://madshot.net/01cb7054c229.png" l="Conversion ID and Label" />. Paste everything below (and into Zoho). Negative keywords are no longer added during setup.
+      goalSteps.push({ id: "adslabels", title: "Save and capture the Conversion ID", body: <>
+        Click Save and continue, then select <b>See event snippet</b> on any conversion action: the first number is the <Shot u="https://madshot.net/9a6bbc707e10.png" l="Conversion ID" /> (shared by every goal), the second is that goal's label. Or click Finish, open an action, and use <Shot u="https://madshot.net/51f00b361b4c.png" l="Tag Setup" /> → Use Google Tag Manager → <Shot u="https://madshot.net/01cb7054c229.png" l="Conversion ID and Label" />. The labels have paste boxes on their goal steps above — check the vault to confirm none are missing. Negative keywords are no longer added during setup.
         <CodeField k="convId" />
-        {cfg.leads !== false && <CodeField k="leadLabel" />}
-        {cfg.c2c !== "none" && <><CodeField k="callLabel" /><CodeField k="mobileLabel" /></>}
       </> });
 
       secs.push({
