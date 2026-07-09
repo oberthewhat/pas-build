@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, createContext, useContext } from "react";
 import {
   Check, Copy, Camera, ChevronDown, ChevronRight, AlertTriangle,
-  RotateCcw, ClipboardList, ExternalLink, BookOpen, Vault, X, Menu, Clipboard,
+  RotateCcw, ClipboardList, ExternalLink, BookOpen, Vault, X, Menu, Clipboard, ChevronLeft,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -32,6 +32,8 @@ const CODE_FIELDS = [
   { k: "ga4measure",    label: "GA4 Measurement ID",                zoho: "GA4 Measurement ID", ph: "G-XXXXXXXXXX", core: true },
   { k: "ga4property",   label: "GA4 Property ID",                   zoho: "GA4 Property ID", core: true },
   { k: "gtm",           label: "GTM Tag ID",                        zoho: "GTM Tag ID", ph: "GTM-XXXXXXX", core: true },
+  { k: "gtmHead",       label: "GTM Header Code",                   zoho: "GTM Header Code", ph: "<!-- Google Tag Manager --> <script>…", core: true, snippet: true },
+  { k: "gtmBody",       label: "GTM Footer Code",                   zoho: "GTM Footer Code", ph: "<!-- Google Tag Manager (noscript) --> <noscript>…", core: true, snippet: true },
   { k: "scDomain",      label: "Search Console Domain",             zoho: "Search Console Domain", core: true },
   { k: "scMeta",        label: "Search Console Meta Code",          zoho: "Search Console Meta Code", ph: "<meta name=\"google-site-verification\" ...>", core: true },
   { k: "ctcAds",        label: "CTC Number — Ads",                  zoho: "CTC — Ads", when: c => c.c2c === "yes" },
@@ -227,16 +229,30 @@ function CodeField({ k }) {
         </label>
         {v.trim() ? <CopyBtn text={v} small /> : null}
       </div>
-      <input
-        value={v}
-        onChange={e => setCode(k, e.target.value)}
-        placeholder={f.ph || "Paste the value exactly as it appears"}
-        style={{
-          width: "100%", boxSizing: "border-box", fontFamily: T.mono, fontSize: 13,
-          padding: "7px 9px", border: `1px solid ${T.line}`, borderRadius: 6,
-          background: "#fff", color: T.ink, outline: "none",
-        }}
-      />
+      {f.snippet ? (
+        <textarea
+          value={v}
+          onChange={e => setCode(k, e.target.value)}
+          placeholder={f.ph || "Paste the full code snippet"}
+          rows={3}
+          style={{
+            width: "100%", boxSizing: "border-box", fontFamily: T.mono, fontSize: 11.5,
+            padding: "7px 9px", border: `1px solid ${T.line}`, borderRadius: 6,
+            background: "#fff", color: T.ink, outline: "none", resize: "vertical", lineHeight: 1.5,
+          }}
+        />
+      ) : (
+        <input
+          value={v}
+          onChange={e => setCode(k, e.target.value)}
+          placeholder={f.ph || "Paste the value exactly as it appears"}
+          style={{
+            width: "100%", boxSizing: "border-box", fontFamily: T.mono, fontSize: 13,
+            padding: "7px 9px", border: `1px solid ${T.line}`, borderRadius: 6,
+            background: "#fff", color: T.ink, outline: "none",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -388,6 +404,7 @@ export default function TrackingBuildGuide() {
       title: "Naming",
       items: [
         { l: "Account / property name (GA4, Optmyzr, GTM, PO field)", v: `${M} - ${bizName}` },
+        client.m ? { l: "M# only — account searches", v: M } : null,
         client.url ? { l: "Site URL (no https) — streams, GTM container", v: noHttps } : null,
         baseDomain ? { l: "Base domain (no www) — CTC tracked domain", v: baseDomain } : null,
         cfg.subdomain && baseDomain ? { l: "Marketing 360 Search Console field (domain property)", v: `sc-domain:${baseDomain}` } : null,
@@ -466,7 +483,7 @@ export default function TrackingBuildGuide() {
       id: "start", title: "Getting started",
       steps: [
         { id: "adpause", title: "Check Adpausing before anything else", body: <>
-          Open <L href="https://adpausing.marketing360.com/">Adpausing</L> and search the M#. You should see <Shot u="https://madshot.net/d28e4900ae2e.png" l="no accounts linked" /> yet.
+          Open <L href="https://adpausing.marketing360.com/">Adpausing</L> and search the M# <Lit v={M} />. You should see <Shot u="https://madshot.net/d28e4900ae2e.png" l="no accounts linked" /> yet.
           <Warn><b>Google Ad account already linked?</b> Search it in Google Ads. LSA next to the account → proceed. A normal Ads account → this is a <b>Rebuild</b>; chat the link in your chatroom for reassignment.</Warn>
           <Warn><b>Facebook Ad account already linked?</b> Use the existing master account from the Facebook Additions task (check the Campaign IDs section in Zoho, or the MO quicklink — migrate to Zoho if needed). A GTM account will already exist — <b>do not create a second one</b>; update its variables and verify codes instead. Master account passwords live in MadPass.</Warn>
         </> },
@@ -646,8 +663,11 @@ export default function TrackingBuildGuide() {
             <CodeField k="convId" />
           </> },
           ...goalSteps,
-          { id: "newset", title: "New settings + auto-apply recommendations", body: <>
-            Goals → Settings → set the Call Conversion Action to your Calls From Ads goal <Shot u="https://madshot.net/445b7adef0da.png" l="example" />. Settings → Account Settings → Customer Match: check <b>Smart Bidding</b> and <b>Conversion Tags</b> <Shot u="https://madshot.net/57f3e0acdfb7.png" l="example" />. Then <Shot u="https://madshot.net/529bb858c082.png" l="Campaigns › Recommendations" /> → <Shot u="https://madshot.net/7de0ac242e7b.png" l="Auto-apply" /> → check these <Shot u="https://madshot.net/32b13deaa07e.png" l="boxes" />: optimized ad rotation, remove redundant / non-serving / conflicting negative keywords, upgrade conversion tracking → Save.
+          { id: "newset", title: "Call conversion setting + Customer Match", body: <>
+            Goals → Settings → set the Call Conversion Action to your Calls From Ads goal <Shot u="https://madshot.net/445b7adef0da.png" l="example" />. Then Settings → Account Settings → Customer Match: check <b>Smart Bidding</b> and <b>Conversion Tags</b> <Shot u="https://madshot.net/57f3e0acdfb7.png" l="example" />.
+          </> },
+          { id: "autoapply", title: "Auto-apply recommendations", body: <>
+            <Shot u="https://madshot.net/529bb858c082.png" l="Campaigns › Recommendations" /> → <Shot u="https://madshot.net/7de0ac242e7b.png" l="Auto-apply" /> → check these <Shot u="https://madshot.net/32b13deaa07e.png" l="boxes" />: <b>optimized ad rotation</b>, <b>remove redundant negative keywords</b>, <b>remove non-serving keywords</b>, <b>remove conflicting negative keywords</b>, and <b>upgrade your conversion tracking</b> → Save.
           </> },
           { id: "awlink", title: "Connect the AW tag back in GA4", body: <>
             In GA4: Property Settings → Data collection and modification → Data Streams → click the URL stream → <Shot u="https://madshot.net/dbe90a36f54a.png" l="Manage connected site tags" /> → add <Lit v={`AW-${(codes.convId || "").replace(/^AW-?/i, "") || "#########"}`} /> <Shot u="https://madshot.net/f5a26f3e2468.png" l="here" />. The same ID works as the connection's nickname.
@@ -667,8 +687,11 @@ export default function TrackingBuildGuide() {
       id: "gtm", title: "Google Tag Manager (GTM)",
       steps: [
         { id: "gtm1", title: "Create the container under your @madwire email", body: <>
-          GTM is the one account created under your <b>@madwire</b> email first, then shared to the master at the end. Open <L href="https://tagmanager.google.com/">tagmanager.google.com</L> → <Shot u="https://madshot.net/4b197cbbe950.png" l="Create Account" />. <Shot u="https://madshot.net/bc49135517f8.png" l="Account Name" />: <Lit v={`${M} - ${bizName}`} />. <Shot u="https://madshot.net/b04a4710c13e.png" l="Container Name" />: the site URL (no https). Platform: <Shot u="https://madshot.net/9fbc025cfe2e.png" l="Web" /> → Create → accept the agreement. The <Shot u="https://madshot.net/77f413aa5516.png" l="code snippets popup" /> appears — copy the <Shot u="https://madshot.net/fa9237ad1efb.png" l="GTM Tag ID" /> to <Shot u="https://madshot.net/1a4ab91db715.png" l="Zoho" /> and close.
+          GTM is the one account created under your <b>@madwire</b> email first, then shared to the master at the end. Open <L href="https://tagmanager.google.com/">tagmanager.google.com</L> → <Shot u="https://madshot.net/4b197cbbe950.png" l="Create Account" />. <Shot u="https://madshot.net/bc49135517f8.png" l="Account Name" />: <Lit v={`${M} - ${bizName}`} />. <Shot u="https://madshot.net/b04a4710c13e.png" l="Container Name" />: the site URL (no https). Platform: <Shot u="https://madshot.net/9fbc025cfe2e.png" l="Web" /> → Create → accept the agreement. The <Shot u="https://madshot.net/77f413aa5516.png" l="code snippets popup" /> appears — copy the <Shot u="https://madshot.net/fa9237ad1efb.png" l="GTM Tag ID" /> to <Shot u="https://madshot.net/1a4ab91db715.png" l="Zoho" />.
           <CodeField k="gtm" />
+          While the popup is open, grab both install snippets too — they go on the site later and you won't have to dig them back out of Admin (they're also one click away in your vault from here on):
+          <CodeField k="gtmHead" />
+          <CodeField k="gtmBody" />
         </> },
         { id: "gtm2", title: "Import the right template container", body: <>
           Reload GTM in a new tab to open the <Shot u="https://madshot.net/2354eddbd9bb.png" l="Automation GTM Templates" /> account, then export the container that matches this build and import it into the client's container.
@@ -691,19 +714,19 @@ export default function TrackingBuildGuide() {
           Admin → User Management (account column) → <Shot u="https://madshot.net/2c0d94d07a2e.png" l="blue plus" /> → add {cfg.ads && client.adSpecEmail ? <>the Ad Specialist <Lit v={client.adSpecEmail} /></> : "the Ad Specialist"} and the <b>Master Account</b> email{codes.master ? <> <Lit v={codes.master} /></> : null} with <Shot u="https://madshot.net/864136865a32.png" l="Admin and Publish access" />. (Can't add someone? Skip + note it.) Log into GTM as the master, <Shot u="https://madshot.net/0a514e4ed8c8.png" l="accept the invitation" />, <Shot u="https://madshot.net/e8a9b9119faa.png" l="find the account" />, and <Shot u="https://madshot.net/bc479e2230aa.png" l="remove your @madwire email" /> to keep your account clear.
         </> },
         { id: "gtm5", title: cfg.clientPlacing ? "Hand tracking codes to the client" : "Place the codes on the website", body: cfg.clientPlacing ? <>
-          The client is placing codes themselves. Comment in your build task <Shot u="https://madshot.net/ea3436bcdce4.png" l="example" /> with: (1) the Meta Tag + GTM Header Tag placed as close to the opening <Lit v="<head>" /> as possible, (2) the GTM Footer Tag above the closing <Lit v="</body>" />, (3) the BCC email for form notifications if applicable, and a note that once codes are placed the task should be set to Complete and a <b>finish tracking build</b> task submitted to the queue. Then add your comments with an MSM tag, log time, and set the task to <b>Completed DNF</b>.
+          The client is placing codes themselves. Comment in your build task <Shot u="https://madshot.net/ea3436bcdce4.png" l="example" /> with: (1) the Meta Tag + GTM Header Tag placed as close to the opening <Lit v="<head>" /> as possible, (2) the GTM Footer Tag above the closing <Lit v="</body>" />, (3) the BCC email for form notifications if applicable — the header code, footer code, and meta tag are all in your vault to paste into the comment — and a note that once codes are placed the task should be set to Complete and a <b>finish tracking build</b> task submitted to the queue. Then add your comments with an MSM tag, log time, and set the task to <b>Completed DNF</b>.
         </> : isWP ? <>
-          Codes are placed with the <b>Header and Footer Scripts</b> plugin (Settings → <Shot u="https://madshot.net/9f7bc94ed317.png" l="Header and Footer Scripts" />; Woo360 sites should have it already). Missing? Plugins → <Shot u="https://madshot.net/eee52a75818f.png" l="Add New Plugin" /> → search <L href="https://wordpress.org/plugins/header-and-footer-scripts/">Header and Footer Scripts</L> → Install → Activate. Place the GTM Head snippet + Search Console meta in the header box, the GTM Body snippet in the footer box. <L href="https://drive.google.com/drive/folders/19xRIJlxP3HmTFSv3mvlAs6VL9DxHQNyP?dmr=1&ec=wgc-drive-hero-goto">Code placement walkthrough video</L> (ignore FB/GTM-plugin steps).
+          Codes are placed with the <b>Header and Footer Scripts</b> plugin (Settings → <Shot u="https://madshot.net/9f7bc94ed317.png" l="Header and Footer Scripts" />; Woo360 sites should have it already). Missing? Plugins → <Shot u="https://madshot.net/eee52a75818f.png" l="Add New Plugin" /> → search <L href="https://wordpress.org/plugins/header-and-footer-scripts/">Header and Footer Scripts</L> → Install → Activate. Place the GTM Head snippet + Search Console meta in the header box, the GTM Body snippet in the footer box — all three are one tap away in your vault. <L href="https://drive.google.com/drive/folders/19xRIJlxP3HmTFSv3mvlAs6VL9DxHQNyP?dmr=1&ec=wgc-drive-hero-goto">Code placement walkthrough video</L> (ignore FB/GTM-plugin steps).
           <Warn>Logins too low to install plugins? Note it for the MSM in the todo comments and the MO note with your todo link — codes not placed. MSM submits a PAS todo once correct logins arrive.</Warn>
         </> : isCustom ? <>
           {plat.gaAccess && <PlatformNote platform={platName}>Add <Lit v={plat.gaAccess} /> to the client's Google Analytics before starting.</PlatformNote>}
           <PlatformNote platform={platName}>{plat.placement}</PlatformNote>
           {plat.warn && <Warn>{plat.warn}</Warn>}
           {plat.ecomInstall && isEcom && <div style={{ margin: "6px 0" }}>{plat.ecomInstall}</div>}
-          Follow this platform's page in the <L href="https://missioncontrol.madwire.com/category/platform-analytics-specialist/builds-platform-analytics-specialist/#">PAS build documentation</L> for the exact clicks. In your GTM workspace, click the <Shot u="https://madshot.net/fee180ff153a.png" l="GTM Tag ID in the top bar" /> to grab the head and body snippets.{isEcom && cfg.buildType === "shopify" ? <> Shopify pulls ecommerce events through the Custom Pixel Code — no Shop App codes needed unless it's a Shop App build.</> : null}
+          Follow this platform's page in the <L href="https://missioncontrol.madwire.com/category/platform-analytics-specialist/builds-platform-analytics-specialist/#">PAS build documentation</L> for the exact clicks. Both snippets are saved in your vault (or reopen the popup via the <Shot u="https://madshot.net/fee180ff153a.png" l="GTM Tag ID in the top bar" />).{isEcom && cfg.buildType === "shopify" ? <> Shopify pulls ecommerce events through the Custom Pixel Code — no Shop App codes needed unless it's a Shop App build.</> : null}
           <Warn>If our logins can't reach the theme/code area, note it for the MSM in your todo comments and the MO note — codes not placed — and the MSM submits a PAS todo once access arrives.</Warn>
         </> : <>
-          In your GTM workspace, click the <Shot u="https://madshot.net/fee180ff153a.png" l="GTM Tag ID in the top bar" /> to open the snippets popup. <b>Head snippet</b> <Shot u="https://madshot.net/a6ff9585206d.png" l="the head code" /> goes under <Shot u="https://madshot.net/e23740419bc4.png" l="Developer › Head JS" /> — <b>remove the comments and the &lt;script&gt; tags</b>; it should <Shot u="https://madshot.net/e23740419bc4.png" l="look like this" />. Save. <b>Body snippet</b> <Shot u="https://madshot.net/0031d18545e1.png" l="the body code" /> goes in the site Footer via an HTML widget, <Shot u="https://madshot.net/b557c686e3a9.png" l="pasted as-is" />. Save and Publish the site.{isEcom ? <> Shop App also needs codes in the Shop App and website plus extra settings — see <L href="https://missioncontrol.madwire.com/platform-analytics-specialist/pas-shopapp-build-documentation-master/">Shop App docs</L>.</> : null}
+          Your head and footer snippets are in the vault (or click the <Shot u="https://madshot.net/fee180ff153a.png" l="GTM Tag ID in the top bar" /> to reopen the popup). <b>Head snippet</b> <Shot u="https://madshot.net/a6ff9585206d.png" l="the head code" /> goes under <Shot u="https://madshot.net/e23740419bc4.png" l="Developer › Head JS" /> — <b>remove the comments and the &lt;script&gt; tags</b>; it should <Shot u="https://madshot.net/e23740419bc4.png" l="look like this" />. Save. <b>Body snippet</b> <Shot u="https://madshot.net/0031d18545e1.png" l="the body code" /> goes in the site Footer via an HTML widget, <Shot u="https://madshot.net/b557c686e3a9.png" l="pasted as-is" />. Save and Publish the site.{isEcom ? <> Shop App also needs codes in the Shop App and website plus extra settings — see <L href="https://missioncontrol.madwire.com/platform-analytics-specialist/pas-shopapp-build-documentation-master/">Shop App docs</L>.</> : null}
         </> },
         ...(!cfg.clientPlacing ? [{ id: "gtm6", title: "Preview, test the funnel, publish", body: <>
           In GTM click <Shot u="https://madshot.net/3355d9821d61.png" l="Preview" />, paste your <Shot u="https://madshot.net/3ed63237bfe3.png" l="website URL" />, Connect. <Shot u="https://madshot.net/776d076cbbf6.png" l="Tag Assistant" /> opens on the site and you'll see your <Shot u="https://madshot.net/b821afe97679.png" l="active tags" />. Send a <Shot u="https://madshot.net/3f03a407db8c.png" l="test form submission" /> and confirm in the summary: <Shot u="https://madshot.net/8b01a57036be.png" l="Link Click" />, <Shot u="https://madshot.net/f2810d361bad.png" l="Container Loaded" />, {(!isCustom && (!isWP || cfg.madforms)) ? <Shot u="https://madshot.net/7dff2d748342.png" l="madform_submit" /> : <>your form-submission trigger</>}{isEcom ? <> — and for purchases, run a test checkout to confirm the ecommerce tags fire</> : null}{cfg.ads ? <>, and <Shot u="https://madshot.net/9cf0f6e93920.png" l="Google Lead Conversion" /> with the <Shot u="https://madshot.net/98478dea163b.png" l="value and ID" /> and <Shot u="https://madshot.net/59a9e30cb4bc.png" l="values" /> pulling in</> : null}. Then <Shot u="https://madshot.net/b5333a3364f7.png" l="Submit" /> and <Shot u="https://madshot.net/fb46c8a8898a.png" l="Publish" />, named <Shot u="https://madshot.net/2eb7bee4e9ad.png" l="Initial Build" />.
@@ -711,7 +734,7 @@ export default function TrackingBuildGuide() {
           {isWP && <div style={{ marginTop: 6, fontSize: 12.5, color: T.muted }}>Tags not firing on a WP form? See the "Iframe forms & trigger fixes" special case below before completing the build.</div>}
         </> }] : []),
         ...(isWP && !cfg.madforms ? [{ id: "gtmbcc", title: "Add the BCC email to form notifications", body: <>
-          Non-MadForms sites need a BCC so submissions pull into Marketing 360. Marketing 360 → search the M# → Intelligence → Settings → Connect Sales and Leads → <Shot u="https://madshot.net/d82edc84676d.png" l="copy the email address" /> (looks like marketing360+…@bcc.mad360.net).
+          Non-MadForms sites need a BCC so submissions pull into Marketing 360. Marketing 360 → search <Lit v={M} /> → Intelligence → Settings → Connect Sales and Leads → <Shot u="https://madshot.net/d82edc84676d.png" l="copy the email address" /> (looks like marketing360+…@bcc.mad360.net).
           <CodeField k="bcc" />
           <div style={{ marginTop: 4 }}>
             <b>Gravity Forms:</b> Forms → hover <Shot u="https://madshot.net/9f5bc74d8980.png" l="Settings" /> → <Shot u="https://madshot.net/e9e98fbc8eb7.png" l="Edit" /> Admin Notifications → add MSM + BCC in the BCC field (<Shot u="https://madshot.net/e174d8201132.png" l="commas for multiple" />) → <Shot u="https://madshot.net/459af6579747.png" l="Update Notification" />. Repeat per form.<br />
@@ -721,6 +744,33 @@ export default function TrackingBuildGuide() {
         </> }] : []),
       ],
     });
+
+    /* ---------- OUTBOUND CLICKS ---------- */
+    if (cfg.outbound) {
+      secs.push({
+        id: "ob", title: "Outbound clicks",
+        steps: [
+          { id: "ob0", title: "Identify what we're tracking", body: <>
+            Outbound clicks = third-party links in CTAs (scheduling, booking, ordering apps). If the todo doesn't name the link, inspect the site's CTAs — there can be more than one (reservations + online ordering, multiple booking calendars). Still unclear? Get clarification from the MSM before building.
+          </> },
+          { id: "ob1", title: "GTM: enable click variables + build the trigger", body: <>
+            <Shot u="https://madshot.net/300236157d72.png" l="Variables › Configure" /> → check everything under <Shot u="https://madshot.net/4f8bdbc1bfc2.png" l="Clicks" /> → close. Then <Shot u="https://madshot.net/299777412aaf.png" l="Triggers › Add New" /> → <Shot u="https://madshot.net/3e268aee35d7.png" l="Click - All Elements" /> → Some Clicks → Click URL <b>contains</b> your target URL — trim it to the root, e.g. <Lit v="https://calendly.com" /> instead of a long parameterized link, and pull the real URL from the button itself (not the todo) in case of redirects. Name it <Shot u="https://madshot.net/56dd374ce884.png" l="Outbound Click - [CTA TYPE]" /> → Save.
+          </> },
+          { id: "ob2", title: "GTM: GA4 outbound_click tag", body: <>
+            <Shot u="https://madshot.net/fc67355339ad.png" l="Tags › New" /> → <Shot u="https://madshot.net/aa085965a452.png" l="Google Analytics › GA4 Event" /> → use your <Shot u="https://madshot.net/0edb56af9994.png" l="GA4 ID variable" /> as the <Shot u="https://madshot.net/b24072d959df.png" l="Measurement ID" />. Event name <Shot u="https://madshot.net/5147f175e5c7.png" l="outbound_click" /> = <Lit v="outbound_click" /> (exact). Advanced → <Shot u="https://madshot.net/293ab7b5a607.png" l="Once Per Page" />. <Shot u="https://madshot.net/0b7fc81036f5.png" l="Triggering" /> = your <Shot u="https://madshot.net/7d825c515734.png" l="outbound trigger" />. Name the tag "GA4 - Outbound Click - [CTA TYPE]" → <Shot u="https://madshot.net/b8e89d2b415e.png" l="save" />. Then in GA4 → <Shot u="https://madshot.net/c6e38defdca6.png" l="Key Events" /> add <Shot u="https://madshot.net/35a2deb87daf.png" l="outbound_click" /> (typed identically) alongside generate_lead.
+          </> },
+          ...(cfg.ads ? [{ id: "ob3", title: "Google Ads outbound goal + GTM tag", body: <>
+            Google Ads → Goals → Summary → <Shot u="https://madshot.net/d65cd6c6a8ff.png" l="Add New" /> → Website → <Shot u="https://madshot.net/bd656858e728.png" l="continue" /> → <Shot u="https://madshot.net/716688db691e.png" l="Outbound Click" /> → <Shot u="https://madshot.net/1e85287c79c1.png" l="Setup" /> → Manual Event → "Outbound Click - [CTA TYPE]". Counting: <b>once per event</b> for purchases (off-site tickets), <b>once per session</b> for leads (booking a consult). <Shot u="https://madshot.net/7e07f5421c3e.png" l="Use Event" /> → Save and Continue → <Shot u="https://madshot.net/e6957df21bd4.png" l="Settings" /> → value none, count one; Primary if it's all we track, Secondary if forms are also tracked. Use Google Tag Manager → copy the <Shot u="https://madshot.net/39fd8e96cf93.png" l="Conversion Label" /> (Zoho row: Type "Google Ads Outbound Click").
+            <CodeField k="outboundLabel" />
+            <div style={{ marginTop: 6 }}>Back in GTM: <Shot u="https://madshot.net/06e2be43facc.png" l="Variables › Add New" /> → <Shot u="https://madshot.net/29b85aeb54e2.png" l="Variable Configuration" /> → <Shot u="https://madshot.net/e274265b1f7e.png" l="Constant" /> = that label, titled like <Shot u="https://madshot.net/1ad7c6e8ddef.png" l="Outbound Click - Schedule - [LABEL]" />. Then <Shot u="https://madshot.net/5177baadea5d.png" l="Tags › Add New" /> → <Shot u="https://madshot.net/7df197af2b78.png" l="Google Ads Conversion Tracking" /> → same <Shot u="https://madshot.net/7a7e10857708.png" l="Conversion ID" />, label = <Shot u="https://madshot.net/903e7a45ac06.png" l="Outbound Clicks" />, firing <Shot u="https://madshot.net/3416d189eec7.png" l="Once per page" />, trigger = your <Shot u="https://madshot.net/73d05f41136f.png" l="outbound trigger" />, name it <Shot u="https://madshot.net/ba1068a16ad3.png" l="Google Ads - Outbound Clicks" /> → Save.</div>
+          </> }] : []),
+          { id: "ob4", title: "Test + Facebook tag if applicable", body: <>
+            Preview the site and click the link: the GA4 outbound tag fires every time{cfg.ads ? "; the Google Ads outbound tag fires too" : ""}. Not firing? Check the Click <Shot u="https://madshot.net/515237618fe6.png" l="Variable" /> → <Shot u="https://madshot.net/3dfb45e2eafa.png" l="Click URL" /> matches the trigger, or switch the trigger from <Shot u="https://madshot.net/de3538fe1b8b.png" l="Click - All Elements" /> to <Shot u="https://madshot.net/2ba5fb79a5b1.png" l="Click - Just Links" />.
+            <div style={{ marginTop: 6 }}><b>Facebook Ads already set up?</b> Tags → <Shot u="https://madshot.net/1cb551ad4f2b.png" l="FB Lead Script" /> → <Shot u="https://madshot.net/1fa8322d22b8.png" l="Triggering" /> → <Shot u="https://madshot.net/2f42be74250c.png" l="plus sign" /> → add your outbound trigger → Save. Custom platforms: mirror any form-tag changes on the <Shot u="https://madshot.net/f84edf18e0a9.png" l="FB Lead Script tag" />. Publish, titled "Outbound Click Addition".</div>
+          </> },
+        ],
+      });
+    }
 
     /* ---------- SEARCH CONSOLE ---------- */
     secs.push({
@@ -758,7 +808,7 @@ export default function TrackingBuildGuide() {
           Sitemaps tab → <Shot u="https://madshot.net/f0f08edf5b6b.png" l="submit the right sitemap" />. Reference by platform: Websites 360 <Lit v="sitemap.xml" /> · Woo360/WooComm/WP <Lit v="sitemap_index.xml" /> · BigCommerce <Lit v="xmlsitemap.php" /> · Shopify <Lit v="sitemap.xml" /> · Volusion <Lit v="sitemap.xml" /> · Wix <Lit v="sitemap.xml" /> · Webflow <Lit v="sitemap.xml" /> (toggle sitemap on in Webflow <Shot u="https://madshot.net/7fba6c248dd1.png" l="settings" />). Status should show <Shot u="https://madshot.net/e3c349fac266.png" l="Success" />.
         </> },
         { id: "sc4", title: "Users + GA4 association", body: <>
-          Settings → <Shot u="https://madshot.net/658d4bc3e3c0.png" l="Users and permissions" /> → add{msmChip}{adSpecChip} with full permissions (skip + note if blocked). Settings → <Shot u="https://madshot.net/4d5d8a3e882f.png" l="Associations" /> → <Shot u="https://madshot.net/87aaffd89ecb.png" l="associate" /> → Ctrl+F your M# to find the GA4 account → radio button → continue → <Shot u="https://madshot.net/1958ada54966.png" l="associate" />.
+          Settings → <Shot u="https://madshot.net/658d4bc3e3c0.png" l="Users and permissions" /> → add{msmChip}{adSpecChip} with full permissions (skip + note if blocked). Settings → <Shot u="https://madshot.net/4d5d8a3e882f.png" l="Associations" /> → <Shot u="https://madshot.net/87aaffd89ecb.png" l="associate" /> → Ctrl+F <Lit v={M} /> to find the GA4 account → radio button → continue → <Shot u="https://madshot.net/1958ada54966.png" l="associate" />.
         </> },
         ...(cfg.ads ? [{ id: "sc5", title: "Link Search Console in Google Ads", body: <>
           In Google Ads: Tools → Data Manager → Featured Products → <Shot u="https://madshot.net/09f995181a45.png" l="Search Console" /> → select it → Ctrl+F your site URL → <Shot u="https://madshot.net/18b6dbe40210.png" l="link" />. Once linked it <Shot u="https://madshot.net/33bf73715ed2.png" l="populates at the top" />.
@@ -799,42 +849,15 @@ export default function TrackingBuildGuide() {
       });
     }
 
-    /* ---------- OUTBOUND CLICKS ---------- */
-    if (cfg.outbound) {
-      secs.push({
-        id: "ob", title: "Outbound clicks",
-        steps: [
-          { id: "ob0", title: "Identify what we're tracking", body: <>
-            Outbound clicks = third-party links in CTAs (scheduling, booking, ordering apps). If the todo doesn't name the link, inspect the site's CTAs — there can be more than one (reservations + online ordering, multiple booking calendars). Still unclear? Get clarification from the MSM before building.
-          </> },
-          { id: "ob1", title: "GTM: enable click variables + build the trigger", body: <>
-            <Shot u="https://madshot.net/300236157d72.png" l="Variables › Configure" /> → check everything under <Shot u="https://madshot.net/4f8bdbc1bfc2.png" l="Clicks" /> → close. Then <Shot u="https://madshot.net/299777412aaf.png" l="Triggers › Add New" /> → <Shot u="https://madshot.net/3e268aee35d7.png" l="Click - All Elements" /> → Some Clicks → Click URL <b>contains</b> your target URL — trim it to the root, e.g. <Lit v="https://calendly.com" /> instead of a long parameterized link, and pull the real URL from the button itself (not the todo) in case of redirects. Name it <Shot u="https://madshot.net/56dd374ce884.png" l="Outbound Click - [CTA TYPE]" /> → Save.
-          </> },
-          { id: "ob2", title: "GTM: GA4 outbound_click tag", body: <>
-            <Shot u="https://madshot.net/fc67355339ad.png" l="Tags › New" /> → <Shot u="https://madshot.net/aa085965a452.png" l="Google Analytics › GA4 Event" /> → use your <Shot u="https://madshot.net/0edb56af9994.png" l="GA4 ID variable" /> as the <Shot u="https://madshot.net/b24072d959df.png" l="Measurement ID" />. Event name <Shot u="https://madshot.net/5147f175e5c7.png" l="outbound_click" /> = <Lit v="outbound_click" /> (exact). Advanced → <Shot u="https://madshot.net/293ab7b5a607.png" l="Once Per Page" />. <Shot u="https://madshot.net/0b7fc81036f5.png" l="Triggering" /> = your <Shot u="https://madshot.net/7d825c515734.png" l="outbound trigger" />. Name the tag "GA4 - Outbound Click - [CTA TYPE]" → <Shot u="https://madshot.net/b8e89d2b415e.png" l="save" />. Then in GA4 → <Shot u="https://madshot.net/c6e38defdca6.png" l="Key Events" /> add <Shot u="https://madshot.net/35a2deb87daf.png" l="outbound_click" /> (typed identically) alongside generate_lead.
-          </> },
-          ...(cfg.ads ? [{ id: "ob3", title: "Google Ads outbound goal + GTM tag", body: <>
-            Google Ads → Goals → Summary → <Shot u="https://madshot.net/d65cd6c6a8ff.png" l="Add New" /> → Website → <Shot u="https://madshot.net/bd656858e728.png" l="continue" /> → <Shot u="https://madshot.net/716688db691e.png" l="Outbound Click" /> → <Shot u="https://madshot.net/1e85287c79c1.png" l="Setup" /> → Manual Event → "Outbound Click - [CTA TYPE]". Counting: <b>once per event</b> for purchases (off-site tickets), <b>once per session</b> for leads (booking a consult). <Shot u="https://madshot.net/7e07f5421c3e.png" l="Use Event" /> → Save and Continue → <Shot u="https://madshot.net/e6957df21bd4.png" l="Settings" /> → value none, count one; Primary if it's all we track, Secondary if forms are also tracked. Use Google Tag Manager → copy the <Shot u="https://madshot.net/39fd8e96cf93.png" l="Conversion Label" /> (Zoho row: Type "Google Ads Outbound Click").
-            <CodeField k="outboundLabel" />
-            <div style={{ marginTop: 6 }}>Back in GTM: <Shot u="https://madshot.net/06e2be43facc.png" l="Variables › Add New" /> → <Shot u="https://madshot.net/29b85aeb54e2.png" l="Variable Configuration" /> → <Shot u="https://madshot.net/e274265b1f7e.png" l="Constant" /> = that label, titled like <Shot u="https://madshot.net/1ad7c6e8ddef.png" l="Outbound Click - Schedule - [LABEL]" />. Then <Shot u="https://madshot.net/5177baadea5d.png" l="Tags › Add New" /> → <Shot u="https://madshot.net/7df197af2b78.png" l="Google Ads Conversion Tracking" /> → same <Shot u="https://madshot.net/7a7e10857708.png" l="Conversion ID" />, label = <Shot u="https://madshot.net/903e7a45ac06.png" l="Outbound Clicks" />, firing <Shot u="https://madshot.net/3416d189eec7.png" l="Once per page" />, trigger = your <Shot u="https://madshot.net/73d05f41136f.png" l="outbound trigger" />, name it <Shot u="https://madshot.net/ba1068a16ad3.png" l="Google Ads - Outbound Clicks" /> → Save.</div>
-          </> }] : []),
-          { id: "ob4", title: "Test + Facebook tag if applicable", body: <>
-            Preview the site and click the link: the GA4 outbound tag fires every time{cfg.ads ? "; the Google Ads outbound tag fires too" : ""}. Not firing? Check the Click <Shot u="https://madshot.net/515237618fe6.png" l="Variable" /> → <Shot u="https://madshot.net/3dfb45e2eafa.png" l="Click URL" /> matches the trigger, or switch the trigger from <Shot u="https://madshot.net/de3538fe1b8b.png" l="Click - All Elements" /> to <Shot u="https://madshot.net/2ba5fb79a5b1.png" l="Click - Just Links" />.
-            <div style={{ marginTop: 6 }}><b>Facebook Ads already set up?</b> Tags → <Shot u="https://madshot.net/1cb551ad4f2b.png" l="FB Lead Script" /> → <Shot u="https://madshot.net/1fa8322d22b8.png" l="Triggering" /> → <Shot u="https://madshot.net/2f42be74250c.png" l="plus sign" /> → add your outbound trigger → Save. Custom platforms: mirror any form-tag changes on the <Shot u="https://madshot.net/f84edf18e0a9.png" l="FB Lead Script tag" />. Publish, titled "Outbound Click Addition".</div>
-          </> },
-        ],
-      });
-    }
-
     /* ---------- FINALIZE ---------- */
     secs.push({
       id: "final", title: "Finalize & complete",
       steps: [
         ...(cfg.ads ? [{ id: "fin1", title: "Connect Google Ads to Adpausing", body: <>
-          Open <L href="https://adpausing.marketing360.com/">Adpausing</L> → search your M# → Link Account. Copy the Advertising ID <Shot u="https://madshot.net/0488156ec173.png" l="exactly as it is in Google Ads" /> (already in your vault), type = Google Ads → <Shot u="https://madshot.net/74b37e54bed5.png" l="Link Account" />.
+          Open <L href="https://adpausing.marketing360.com/">Adpausing</L> → search <Lit v={M} /> → Link Account. Copy the Advertising ID <Shot u="https://madshot.net/0488156ec173.png" l="exactly as it is in Google Ads" /> (already in your vault), type = Google Ads → <Shot u="https://madshot.net/74b37e54bed5.png" l="Link Account" />.
         </> }] : []),
         { id: "fin2", title: "Log IDs in Marketing 360", body: <>
-          In Marketing 360: account name (top right) → <Shot u="https://madshot.net/36c280ed692f.png" l="View All" /> → search the M# → <Shot u="https://madshot.net/f8111ffb91da.png" l="Setup" />. Fill from your vault: <Shot u="https://madshot.net/66475a481789.png" l="Google Ad Account ID" /> + master email, <Shot u="https://madshot.net/56aa3537d1fd.png" l="Analytics Property ID" /> + master email, <Shot u="https://madshot.net/d45290abb5df.png" l="Search Console URL" /> (EXACTLY as logged in Search Console) + master email{cfg.merchant ? ", Merchant Center ID + master email" : ""}. You should have 6 fields filled before <Shot u="https://madshot.net/fae88a181dc2.png" l="submitting" />.
+          In Marketing 360: account name (top right) → <Shot u="https://madshot.net/36c280ed692f.png" l="View All" /> → search <Lit v={M} /> → <Shot u="https://madshot.net/f8111ffb91da.png" l="Setup" />. Fill from your vault: <Shot u="https://madshot.net/66475a481789.png" l="Google Ad Account ID" /> + master email, <Shot u="https://madshot.net/56aa3537d1fd.png" l="Analytics Property ID" /> + master email, <Shot u="https://madshot.net/d45290abb5df.png" l="Search Console URL" /> (EXACTLY as logged in Search Console) + master email{cfg.merchant ? ", Merchant Center ID + master email" : ""}. You should have 6 fields filled before <Shot u="https://madshot.net/fae88a181dc2.png" l="submitting" />.
           {cfg.subdomain && <Warn>Subdomain builds: the Search Console URL must be the <Lit v="sc-domain:domain.com" /> format.</Warn>}
           {isEcom && <div style={{ marginTop: 6 }}><b>Order notifications → Conversions Inbox:</b> add the Order Notification BCC email (Intelligence → Settings → <Shot u="https://madshot.net/62e85e8d0137.png" l="Connect Sales and Leads" />) plus the MSM to the store's order notifications.{plat.orderNotif ? <> {platName}: {plat.orderNotif}</> : <> Placement varies by platform — see the platform build docs.</>}{["squarespace", "wix", "square"].includes(cfg.buildType) || cfg.buildType === "custom" ? <> Some platforms (Squarespace, Wix, Square) can't take a BCC directly — the MSM submits a CRM/Form Additions task to connect orders via Zapier instead.</> : null}</div>}
         </> },
@@ -864,7 +887,11 @@ export default function TrackingBuildGuide() {
       `MSM: ${client.msmEmail || "—"}${cfg.ads ? `   ·   Ad Specialist: ${client.adSpecEmail || "—"}` : ""}`,
       `Build: ${({ w360: "Websites 360", wp: "WordPress / Woo360", shopify: "Shopify", bigcommerce: "BigCommerce", volusion: "Volusion", custom: "Custom platform" })[cfg.buildType] || "—"} · ${cfg.ecom ? (cfg.leads !== false ? "Leads + Ecommerce" : "Ecommerce") : "Lead Gen"}${cfg.ads ? " · Google Ads" : " · No ad spend"}${cfg.c2c === "yes" ? " · C2Cs" : cfg.c2c === "site" ? " · site number (no C2C)" : " · no call tracking"}${cfg.merchant ? " · Merchant Center" : ""}${cfg.outbound ? " · Outbound clicks" : ""}${cfg.subdomain ? " · Subdomain (sc-domain)" : ""}`,
       "-".repeat(46),
-      ...fields.map(f => `${f.zoho}: ${(codes[f.k] || "").trim() || "(not captured)"}`),
+      ...fields.filter(f => !f.snippet).map(f => `${f.zoho}: ${(codes[f.k] || "").trim() || "(not captured)"}`),
+      ...(fields.some(f => f.snippet) ? [
+        "-".repeat(46),
+        ...fields.filter(f => f.snippet).flatMap(f => [`${f.zoho}:`, (codes[f.k] || "").trim() || "(not captured)", ""]),
+      ] : []),
     ];
     return lines.join("\n");
   }, [fields, codes, client, cfg, M, bizName]);
@@ -928,6 +955,15 @@ export default function TrackingBuildGuide() {
             <div style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{`${M} - ${bizName}`}</div>
           </div>
           <CopyBtn text={`${M} - ${bizName}`} small />
+        </div>
+      )}
+      {client.m && (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 7px", borderRadius: 6, background: T.codeBg }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink }}>M# only <span style={{ fontFamily: T.mono, color: T.muted, fontWeight: 400 }}>— for account searches</span></div>
+            <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.muted }}>{M}</div>
+          </div>
+          <CopyBtn text={M} small />
         </div>
       )}
       {client.url && (
@@ -1071,7 +1107,9 @@ export default function TrackingBuildGuide() {
   /* --- Section screen --- */
   const SectionScreen = ({ sec, index }) => {
     const p = sectionProgress(sec);
-    const next = navItems[navItems.findIndex(n => n.id === sec.id) + 1];
+    const idx = navItems.findIndex(n => n.id === sec.id);
+    const next = navItems[idx + 1];
+    const prev = navItems[idx - 1];
     return (
       <div>
         <Eyebrow>Phase {index + 1} of {sections.length} · {p.done}/{p.total} steps</Eyebrow>
@@ -1109,13 +1147,22 @@ export default function TrackingBuildGuide() {
             </div>
           );
         })}
-        {next && (
-          <button onClick={() => setActive(next.id)} style={{
-            marginTop: 6, padding: "10px 18px", borderRadius: 10, border: "none", cursor: "pointer",
-            background: T.ink, color: "#fff", fontWeight: 700, fontSize: 13.5,
-            display: "inline-flex", alignItems: "center", gap: 8, fontFamily: T.sans,
-          }}>Continue to {next.title} <ChevronRight size={15} /></button>
-        )}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+          {prev && (
+            <button onClick={() => setActive(prev.id)} style={{
+              padding: "10px 16px", borderRadius: 10, cursor: "pointer",
+              border: `1px solid ${T.line}`, background: "#fff", color: T.muted, fontWeight: 700, fontSize: 13.5,
+              display: "inline-flex", alignItems: "center", gap: 8, fontFamily: T.sans,
+            }}><ChevronLeft size={15} /> {prev.title}</button>
+          )}
+          {next && (
+            <button onClick={() => setActive(next.id)} style={{
+              padding: "10px 18px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: T.ink, color: "#fff", fontWeight: 700, fontSize: 13.5,
+              display: "inline-flex", alignItems: "center", gap: 8, fontFamily: T.sans,
+            }}>Continue to {next.title} <ChevronRight size={15} /></button>
+          )}
+        </div>
       </div>
     );
   };
