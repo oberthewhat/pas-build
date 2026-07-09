@@ -915,6 +915,18 @@ export default function TrackingBuildGuide() {
       <div style={{ height: 3, background: T.line, borderRadius: 2, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${fields.length ? (filled / fields.length) * 100 : 0}%`, background: T.accent, transition: "width .4s" }} />
       </div>
+      {(client.m || client.name) && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "7px 9px",
+          borderRadius: 8, background: T.sidebar, color: "#fff",
+        }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: 1.2, textTransform: "uppercase", color: "#8FB4D9", fontWeight: 700 }}>Account name</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{`${M} - ${bizName}`}</div>
+          </div>
+          <CopyBtn text={`${M} - ${bizName}`} small />
+        </div>
+      )}
       {(client.msmEmail || (cfg.ads && client.adSpecEmail)) && (
         <div style={{ marginTop: 6 }}>
           <div style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: 1.2, textTransform: "uppercase", color: T.muted, fontWeight: 700, marginBottom: 4 }}>Contacts</div>
